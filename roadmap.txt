@@ -1,0 +1,23 @@
+//server.js summary 
+   define all the requirements
+   declare app as express 
+   pass this app in http.createServer()
+
+   //webSocket backend login 
+   for temporary use define users and userSockets as an array locally
+   now we need to define function for the webSockets
+   io.on('',()=>{}) connection is setup and we pass socket as it is the user that has logged in 
+   now we have to extract the username so we extract it from the JWT and then store it in users and also store socket.id in userSockets
+   now we need to sotre the messages so
+   socket.on('',(to,msg)) we pass to and msg
+   so we identify the targetSocket using the to and also we know the msg is from our logged in user so we simply store the msg in the db and if the targetSocket is online we fire the messages using io.to().emit("",{});
+   now we also need to build a disconnect function as the user will not be connected forever
+   so simply socket.on('',()=>{}) now simply delete the user and the socket.id from their respective arrays for the temporary method 
+
+
+   //backend logic to fetch the messages
+
+
+   //backend logic to fetch all the conversation for the sidebar
+
+
