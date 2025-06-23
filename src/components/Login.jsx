@@ -7,9 +7,8 @@ function Login({onLogin}) {
 
   const handleLogin = async() => {
     try{
-        const res = await axios.post("/api/auth/login",{username,password});
+        const res = await axios.post("http://localhost:3000/api/auth/login",{username,password});
         onLogin(res.data.username);
-        onRegister();
     }catch(err){
         console.log("Error sending data to backend",err);
         alert("Login failed");

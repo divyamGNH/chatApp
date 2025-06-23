@@ -25,7 +25,7 @@ const io = new Server(server, {
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true}));
 app.use(cookieParser());
 
 // TODO: Add your auth routes

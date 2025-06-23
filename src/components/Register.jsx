@@ -7,7 +7,7 @@ function Register({ onRegister }) {
 
   const handleRegister = async () => {
     try {
-      const res = await axios.post("/api/auth/register", { username, password });
+      const res = await axios.post("http://localhost:3000/api/auth/register", { username, password });
       console.log("User registered successfully");
       
       //to tell how the frontend must be updated after a succesfull registration (can also pass the parameters if needed like in the login page we have passed the username)

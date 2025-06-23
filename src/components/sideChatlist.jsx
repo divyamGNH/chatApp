@@ -9,23 +9,23 @@ function sideChatlist({currentUser,onSelect}){
 
     useEffect(()=>{
         if(!currentUser) return;
-        axios.get("/api/conversations/:username")
+        axios.get(`http://localhost:3000/api/conversations/:${currentUser}`)
         .then((res)=>{
             setSidelist(res.data);
         })
         .catch((err)=>{
-
+          console.log("Failed to fetch conversations:", err);
         })
     },[currentUser])
     return (
         <div>
       <h3>Conversations</h3>
-      {sidelist.map((u) => (
+      {sidelist.map((targetUser) => (
         <div 
-        key={u}
-        onClick={() => onSelect(u)}
+        key={targetUser}
+        onClick={() => onSelect(targetUser)}
         >
-          {u}
+          {targetUser}
         </div>
       ))}
     </div>
