@@ -3,11 +3,12 @@ import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import jwt from "jsonwebtoken";
-import connectDB from "./db";
-import Message from "./dbModels/message";
+import connectDB from "./db.js";
+import Message from "./dbModels/message.js";
 import cookieParser from "cookie-parser";
-import auth from "./routes/auth";
+import auth from "./routes/auth.js";
 import dotenv from "dotenv";
+
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ const io = new Server(server, {
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // TODO: Add your auth routes
