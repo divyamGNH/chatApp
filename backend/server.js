@@ -9,9 +9,7 @@ import cookieParser from "cookie-parser";
 import auth from "./routes/auth.js";
 import dotenv from "dotenv";
 
-
 dotenv.config();
-
 connectDB();
 
 const app = express();
@@ -25,97 +23,121 @@ const io = new Server(server, {
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// TODO: Add your auth routes
-app.use("/api/auth", auth); // Placeholder
+app.use("/api/auth", auth);
 
-const users= {};       // socket.id -> username
-const userSockets = {}; // username -> socket.id
+// In-memory user storage
+const users = {};        // socket.id -> username
+const userSockets = {};  // username -> socket.id
 
+// Socket.IO logic
 io.on('connection', (socket) => {
-  console.log("User is connected");
+  console.log("🔌 User connected:", socket.id);
 
   try {
-    // Extract token from cookie header
     const token = socket.handshake.headers.cookie
       ?.split(';')
       .find(c => c.trim().startsWith('token='))
       ?.split('=')[1];
 
-    if (!token) return;
+    if (!token) {
+      console.log("❌ No token found in cookies");
+      return;
+    }
 
-    // Verify and decode the token
-    const decoded = jwt.verify(token, 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     const username = decoded.username;
 
-    //Store the username and socketid for further use
-    //for temporary use later we have to use a db for these too
     users[socket.id] = username;
     userSockets[username] = socket.id;
 
+    console.log(`✅ User authenticated: ${username} (${socket.id})`);
   } catch (err) {
-    console.log("Error fetching username for sockets", err);
+    console.log("❌ Error verifying token:", err);
   }
 
-
-  //recieve socket private messages
-  socket.on('private_msg',async(to,message)=>{
+  // ✅ FIXED: correct event name + logs
+  socket.on('private_message', async ({ to, message }) => {
     const from = users[socket.id];
-    const targetSocket = userSockets[to];
+    console.log(`📨 Message received from ${from} to ${to}: ${message}`);
 
-    //send and store the message in the db 
-    await Message.create({from,to, message});
-
-    //if the targetSocket is online and connected 
-    if(targetSocket){
-        io.to(targetSocket).emit('private_msg',{from, message});
+    if (!from || !to || !message) {
+      console.log("⚠️ Missing data in message");
+      return;
     }
-  })
-  
 
-  //disconnect a user or socket
-  socket.on('disconnect', ()=>{
+    try {
+      const saved = await Message.create({ from, to, message });
+      console.log("💾 Message saved to DB:", saved);
+
+      const targetSocket = userSockets[to];
+      if (targetSocket) {
+        console.log("📤 Emitting to target user:", to);
+        io.to(targetSocket).emit('private_message', { from, message });
+      } else {
+        console.log("⛔ Target user is offline");
+      }
+    } catch (err) {
+      console.error("❌ Error saving message:", err);
+    }
+  });
+
+  socket.on('disconnect', () => {
     const username = users[socket.id];
+    console.log(`🔌 Disconnected: ${username} (${socket.id})`);
     delete users[socket.id];
     delete userSockets[username];
-
-    //this is the temporary appraoch as we store users and userSockets locally but later we will use databases for them too then we have to change the logic here
-  })
+  });
 });
 
+// Messages route
+app.get("/api/messages/:username", async (req, res) => {
+  try {
+    const user = req.query.self;
+    const reciever = req.params.username;
 
-//get all the messages that a user has recieved from the database
-app.get("/api/messages/:username", async(req,res)=>{
-    try{
-        //first get the sender and reciever info soo
-        const user = req.query.self;
-        const reciever = req.params.username;
+    const messages = await Message.find({
+      $or: [
+        { from: user, to: reciever },
+        { from: reciever, to: user }
+      ]
+    }).sort({ timestamp: 1 });
 
-        const messages = await Message.find({
-            $or :[
-                {from:user, to:reciever},
-                {from:reciever, to:user}   
-            ]
-        }).sort({timestamp:1});
-        //timestamp means sort all the messages ascencding according to the time 
+    res.send(messages);
+  } catch (err) {
+    console.error("❌ Error fetching messages:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
-        res.send(messages);
-    }catch(err){
-        console.log("Error fetching messages from the database",err);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-})
+// Chat list route
+app.get("/api/conversations", async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ error: "No token provided" });
 
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const user = decoded.username;
 
-//get all the user's chat list that is all the other users that the user has chatted to 
-app.get("/api/conversations/:username", async(req,res)=>{
-    //now simply we want all the users that our logged in user has sent the messages to 
+    const messages = await Message.find({
+      $or: [{ from: user }, { to: user }]
+    });
 
-    const username = req.params
-})
+    const chatUsers = new Set();
+    messages.forEach(msg => {
+      if (msg.from !== user) chatUsers.add(msg.from);
+      if (msg.to !== user) chatUsers.add(msg.to);
+    });
+
+    res.json([...chatUsers]);
+  } catch (err) {
+    console.error("❌ Error in fetching conversations:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 server.listen(3000, () => {
-  console.log("Server is listening at PORT: 3000");
+  console.log("🚀 Server running on http://localhost:3000");
 });
