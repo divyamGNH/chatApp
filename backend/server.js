@@ -8,6 +8,7 @@ import Message from "./dbModels/message.js";
 import cookieParser from "cookie-parser";
 import auth from "./routes/auth.js";
 import dotenv from "dotenv";
+import userRoutes from "./routes/user.js"
 
 dotenv.config();
 connectDB();
@@ -27,6 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/api/auth", auth);
+app.use("/api/user", userRoutes);
 
 // In-memory user storage
 const users = {};        // socket.id -> username
@@ -76,6 +78,7 @@ io.on('connection', (socket) => {
       if (targetSocket) {
         console.log("📤 Emitting to target user:", to);
         io.to(targetSocket).emit('private_message', { from, message });
+        console.log("emitted succesfully");
       } else {
         console.log("⛔ Target user is offline");
       }
@@ -105,7 +108,15 @@ app.get("/api/messages/:username", async (req, res) => {
       ]
     }).sort({ timestamp: 1 });
 
-    res.send(messages);
+    const cleanedMessages = messages.map(msg => ({
+      _id: msg._id,
+      from: msg.from,
+      to: msg.to,
+      message: msg.message,
+      timestamp: msg.timestamp,
+    }));
+
+    res.send(cleanedMessages);
   } catch (err) {
     console.error("❌ Error fetching messages:", err);
     res.status(500).json({ error: 'Internal Server Error' });

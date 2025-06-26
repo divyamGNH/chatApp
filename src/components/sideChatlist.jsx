@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import "./sideChatlist.css";
 
 // onSelect is a function in App.jsx that sets the target user
 // currentUser is the logged-in user, passed from App.jsx
@@ -29,6 +30,15 @@ function sideChatlist({ currentUser, onSelect }) {
   return (
     <div>
       <h3>Conversations</h3>
+
+      <h4>Start New Chat</h4>
+      <input
+        value={newTarget}
+        onChange={(e) => setNewTarget(e.target.value)}
+        placeholder="Enter username"
+      />
+      <button onClick={handleManualEntry}>Chat</button>
+      
       {sidelist.map((targetUser) => (
         <div
           key={targetUser}
@@ -39,13 +49,7 @@ function sideChatlist({ currentUser, onSelect }) {
       ))}
 
       <hr />
-      <h4>Start New Chat</h4>
-      <input
-        value={newTarget}
-        onChange={(e) => setNewTarget(e.target.value)}
-        placeholder="Enter username"
-      />
-      <button onClick={handleManualEntry}>Chat</button>
+      
     </div>
   );
 }

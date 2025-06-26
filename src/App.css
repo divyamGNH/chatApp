@@ -1,0 +1,47 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background-color: #111B21; /* Match your WhatsApp dark background */
+  color: white;
+  height: 100vh;
+  width: 100vw;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  margin: 0px;
+  padding:0px;
+  border:0px;
+}
+
+.sideContainer {
+  width: 25%;
+  height: 100vh;
+  border-right: 1px solid #ccc;
+  color: white;
+  background-color: #111B21;
+  margin: 0px;
+  padding:0px;
+  display: flex;
+}
+
+.chatbox {
+  width: 75%;
+  height: 100vh;
+  padding: 10px;
+  color: #111B21;
+  margin: 0px;
+  padding:0px;
+  display: flex;
+}
+
+.cb1 {
+  background: #111B21;
+}
